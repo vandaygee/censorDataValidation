@@ -19,9 +19,13 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.time.Duration;
+import java.time.Instant;
+
 import java.util.Iterator;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -81,11 +85,11 @@ public class FirstApp {
 //          Object obj = parser.parse(new FileReader("C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\raw_weather_data_aarhus\\tempm.txt"));
 //          JSONObject outerObject = new JSONObject(obj);
           
-          String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\raw_weather_data_aarhus\\tempm.txt";
+          String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\raw_weather_data_aarhus\\tempm5.txt";
           //String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp.json";
           //String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\tempSens.rdf";
           String jsonFile=readFile(path, Charset.defaultCharset());
-          //JSONObject jsonObject = new JSONObject(jsonFile);
+          //org.json.JSONObject jsonObject = new org.json.JSONObject(jsonFile);
 //          //JSONArray jsonArray = jsonObject.getJSONArray("Temperature");
 //          System.out.println(jsonObject.length());
 //          
@@ -109,13 +113,17 @@ public class FirstApp {
           DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
           Date date = new Date();
           System.out.println(dateFormat.format(date));
-          String file="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\newTest_now.rdf";
+          String file="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\newTest_now5.rdf";
          // String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp.json";
           //readRDF(file);
          // String jsonFile=readFile(path, Charset.defaultCharset());
          // JSONObject jsonObject = new JSONObject(jsonFile);
-          //loadDataIntoRDF(file);
-          sparqlTest();
+         //loadDataIntoRDF(file);
+         //sparqlTest();
+         
+         String erronousJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test.json";
+         String cleanJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\temp_test.json";
+         cleanUpData(erronousJSONPath, cleanJSONPath);
         } catch (Exception e) {//OWLOntologyCreation
             e.printStackTrace();
         }
@@ -167,7 +175,7 @@ public class FirstApp {
 
         System.out.println(newJSONObject);
         
-        String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test.json";
+        String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
         FileWriter fileWriter = new FileWriter(path);
 	fileWriter.write(newJSONObject.toString());
 	fileWriter.flush();
@@ -313,7 +321,7 @@ System.out.println();
         return ResourceFactory.createResource ( BASE + localname );
     }
     
-    private static Property p ( String localname ) {
+    private static Property p ( String localname ){
         return ResourceFactory.createProperty ( BASE, localname );
     }
 
@@ -362,7 +370,7 @@ System.out.println();
          RDFDataMgr.write(output, model, RDFFormat.RDFXML_ABBREV);
     }
     
-    private static void readRDF(String File){
+    private static void readRDF(String File) throws Exception{
 //        String inputFile="amit.xml";
        
         Model model = ModelFactory.createDefaultModel();
@@ -388,7 +396,9 @@ System.out.println();
          Resource tempSensor = model.createResource( "http://SmartHO.org.com/temps#" );
             //System.out.println(model.listres);
             // Now we get an iterator over the resources that have type o_Parking.
-            System.out.println("i can display");
+            long count=model.size();
+            System.out.println(count);
+           
         for (ResIterator res = model.listResourcesWithProperty( RDF.type, tempSensor ); res.hasNext(); ) {
              Resource r = res.next();
 
@@ -418,25 +428,32 @@ System.out.println();
             }
   }
     
+    private static long countRDFObjects (String File) throws Exception{
+        Model model = ModelFactory.createDefaultModel();
+        InputStream in =new FileInputStream(File);
+        model.read(in,null,"RDF/XML");
+        return model.size();  
+    }
+    
     private static void loadDataIntoRDF(String File)throws Exception{
         
          // Create an empty model 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM); 
    
         // Use the FileManager to find the input file 
-        //InputStream in = FileManager.get().open(File);
-      
-        
+        //InputStream in = FileManager.get().open(File)
+       
 //         if (in == null) 
 //            throw new IllegalArgumentException("File: "+File+" not found"); 
          
-         String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test.json";
+         String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
           //readRDF(file);
          String jsonFile=readFile(path, Charset.defaultCharset());
          org.json.JSONObject jsonData = new org.json.JSONObject(jsonFile);
          
          int objectCount=jsonData.length();
          System.out.println("Objects: "+objectCount);
+        
   
 //        // Read the RDF/XML file 
 //        model.read(in, null); 
@@ -524,33 +541,160 @@ System.out.println();
     }
     
     private static void sparqlTest() throws Exception{
-        String file="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\newTest_now.rdf";
+        Instant start=Instant.now();
+        long beforeUsedMemory=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+        String file="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\newTest_now2.rdf";
         InputStream in=new FileInputStream(file);
         Model model=ModelFactory.createDefaultModel();
         model.read(in,null,"RDF/XML");
         in.close();
+        System.out.println("Size of Object: "+ model.size());
         String queryString=
                 "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"+
                 "PREFIX PhysicalSensor: <http://www.semanticweb.org/40011133/ontologies/2017/10/untitled-ontology-21#>"+
-                "SELECT ?t WHERE { "+
+                "SELECT ?v ?t WHERE { "+
                 "?temperatureSenor PhysicalSensor:hasTimestamp ?t ."+
                 "?temperatureSenor PhysicalSensor:hasValue ?v ."+
 //                "bind(xsd:dateTimeStamp(?t) as ?t)"+
 //                "bind(xsd:float(?v)) as ?v)"+
+                //" FILTER (?t = \"2014-05-08T22:50:00\") ."+
                 " FILTER (?v = 0) ."+
                 "}"+
                 "ORDER BY DESC(?t)";
         Query query=QueryFactory.create(queryString);
         QueryExecution qe= QueryExecutionFactory.create(query, model);
         ResultSet rs=qe.execSelect();
+        int resultCount=0;
         while(rs.hasNext()){
+            resultCount++;
             QuerySolution soln=rs.nextSolution();
             Literal time=soln.getLiteral("t");
             Literal value=soln.getLiteral("v");
-            System.out.println(time.getString());// +" : "+value.getString());
-            //System.out.println(soln);
             
+            boolean isFloat =checkIfFloat(value.getString()) ;
+            if(isFloat)
+                System.out.println(time.getString() +" : "+value.getString());
+            else
+                System.out.println(time.getString() +" : not a float value");   
         }
         qe.close();
+         System.out.println("Records Affected by query: "+resultCount);
+         Instant end=Instant.now();
+         Duration timeElapsed=Duration.between(start, end);
+         long afterUsedMemory=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+         long actualUsedMemory=afterUsedMemory-beforeUsedMemory;
+         
+         String hrSize = null;
+
+        double b = actualUsedMemory/1.0;
+        double k = actualUsedMemory/1024.0;
+        double m = ((actualUsedMemory/1024.0)/1024.0);
+        double g = (((actualUsedMemory/1024.0)/1024.0)/1024.0);
+        double t = ((((actualUsedMemory/1024.0)/1024.0)/1024.0)/1024.0);
+
+        DecimalFormat dec = new DecimalFormat("0.00");
+        
+        if ( t>1 ) {
+        hrSize = dec.format(t).concat(" TB");
+        } else if ( g>1 ) {
+            hrSize = dec.format(g).concat(" GB");
+        } else if ( m>1 ) {
+            hrSize = dec.format(m).concat(" MB");
+        } else if ( k>1 ) {
+            hrSize = dec.format(k).concat(" KB");
+        } else {
+            hrSize = dec.format(b).concat(" Bytes");
+        }
+     
+         System.out.println("Time complexity: "+(timeElapsed.toMillis()/1000)+"."+(timeElapsed.toMillis()%1000)+" seconds");
+         System.out.println("Space complexity: "+hrSize);
+    }
+    
+    private static boolean checkIfFloat(String value){
+        boolean isFloat=false;
+        for(int i=0;i<value.length();i++){
+            if(value.charAt(i)=='.'){
+                isFloat=true;
+                break;
+            }
+        }
+        return isFloat;
+    }
+    
+    private static void cleanUpData(String inputFile, String outputFile) throws Exception{
+        Instant start=Instant.now();
+        long beforeUsedMemory=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+        
+        String jsonFile=readFile(inputFile, Charset.defaultCharset());
+        org.json.JSONObject jsonData = new org.json.JSONObject(jsonFile);
+         
+        org.json.JSONObject newJSONObject=new org.json.JSONObject();
+         
+        int objectCount=jsonData.length();
+        System.out.println("Total Node: "+objectCount);
+         
+        org.json.JSONObject innerObject=null;//new JSONObject();
+        String hasTimeStamp = null;
+        String hasValue=null;
+          
+        Iterator key = jsonData.keys();
+        int i=0;
+        int cleanedNode=0;
+        while (key.hasNext()) {
+            String k = key.next().toString();
+            org.json.JSONObject jObj= new org.json.JSONObject(jsonData.getString(k));
+
+            boolean isFloat=checkIfFloat(jObj.get("hasValue").toString());
+            boolean isNotDigitZero=!("0".equals(jObj.get("hasValue").toString()));
+            if(isFloat||isNotDigitZero){
+                innerObject=new org.json.JSONObject(); 
+                hasTimeStamp = jObj.get("hasTimestamp").toString();//get timestamp
+                hasValue=jObj.get("hasValue").toString();//get value
+                innerObject.put("hasTimestamp",hasTimeStamp);
+                innerObject.put("hasValue",hasValue);
+                i++;
+                newJSONObject.put("Temp"+i,innerObject );
+            }else{
+                cleanedNode++;
+            } 
+        } 
+        
+        Instant end=Instant.now();
+         Duration timeElapsed=Duration.between(start, end);
+         long afterUsedMemory=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+         long actualUsedMemory=afterUsedMemory-beforeUsedMemory;
+         
+         String hrSize = null;
+
+        double b = actualUsedMemory/1.0;
+        double k = actualUsedMemory/1024.0;
+        double m = ((actualUsedMemory/1024.0)/1024.0);
+        double g = (((actualUsedMemory/1024.0)/1024.0)/1024.0);
+        double t = ((((actualUsedMemory/1024.0)/1024.0)/1024.0)/1024.0);
+
+        DecimalFormat dec = new DecimalFormat("0.00");
+        
+        if ( t>1 ) {
+        hrSize = dec.format(t).concat(" TB");
+        } else if ( g>1 ) {
+            hrSize = dec.format(g).concat(" GB");
+        } else if ( m>1 ) {
+            hrSize = dec.format(m).concat(" MB");
+        } else if ( k>1 ) {
+            hrSize = dec.format(k).concat(" KB");
+        } else {
+            hrSize = dec.format(b).concat(" Bytes");
+        }
+     
+        //System.out.println(newJSONObject);
+        System.out.println("Nodes cleaned: "+cleanedNode);
+        System.out.println("valid nodes: "+newJSONObject.length());
+        System.out.println("Time complexity: "+(timeElapsed.toMillis()/1000)+"."+(timeElapsed.toMillis()%1000)+" seconds");
+         System.out.println("Space complexity: "+hrSize);
+        
+        FileWriter fileWriter = new FileWriter(outputFile);
+	fileWriter.write(newJSONObject.toString());
+	fileWriter.flush();
+        System.out.println("Data written successfully into json. Open at: "+outputFile);
     }
 }
