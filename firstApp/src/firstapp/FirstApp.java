@@ -696,5 +696,6 @@ System.out.println();
 	fileWriter.write(newJSONObject.toString());
 	fileWriter.flush();
         System.out.println("Data written successfully into json. Open at: "+outputFile);
+        
     }
 }
