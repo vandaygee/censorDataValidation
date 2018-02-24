@@ -77,8 +77,7 @@ public class FirstApp {
 
   public static void main(String[] args) {
     try {
-        
-//        OWLOntologyManager man = OWLManager.createOWLOntologyManager();
+        //OWLOntologyManager man = OWLManager.createOWLOntologyManager();
 //        File file = new File("C:\\Users\\Duchess\\Documents\\SmartSUM\\smartSpace.owl");
 //        OWLOntology o = man.loadOntologyFromOntologyDocument(file);
 //        System.out.println(o);
@@ -695,7 +694,6 @@ System.out.println();
         FileWriter fileWriter = new FileWriter(outputFile);
 	fileWriter.write(newJSONObject.toString());
 	fileWriter.flush();
-        System.out.println("Data written successfully into json. Open at: "+outputFile);
-        
+        System.out.println("Data written successfully into json. Open at: "+outputFile);     
     }
 }
