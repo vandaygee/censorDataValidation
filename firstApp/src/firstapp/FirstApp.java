@@ -77,52 +77,30 @@ public class FirstApp {
 
   public static void main(String[] args) {
     try {
-        //OWLOntologyManager man = OWLManager.createOWLOntologyManager();
-//        File file = new File("C:\\Users\\Duchess\\Documents\\SmartSUM\\smartSpace.owl");
-//        OWLOntology o = man.loadOntologyFromOntologyDocument(file);
-//        System.out.println(o);
-//          Object obj = parser.parse(new FileReader("C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\raw_weather_data_aarhus\\tempm.txt"));
-//          JSONObject outerObject = new JSONObject(obj);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        System.out.println(dateFormat.format(date));
+        
+          //This is the part that writes raw dataset to json format.
+          String rawDatasetPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\raw_weather_data_aarhus\\tempm5.txt";
+          String saveJsonFilePath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
+          String jsonFile=readFile(rawDatasetPath, Charset.defaultCharset());
+          //makeJson(jsonFile,saveJsonFilePath);
           
-          String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\raw_weather_data_aarhus\\tempm5.txt";
-          //String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp.json";
-          //String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\tempSens.rdf";
-          String jsonFile=readFile(path, Charset.defaultCharset());
-          //org.json.JSONObject jsonObject = new org.json.JSONObject(jsonFile);
-//          //JSONArray jsonArray = jsonObject.getJSONArray("Temperature");
-//          System.out.println(jsonObject.length());
-//          
-//          for (int i = 0, size = jsonObject.length(); i < size; i++)
-//          {
-//              Iterator key = jsonObject.keys();
-//                while (key.hasNext()) {
-//                    String k = key.next().toString();
-//                    System.out.println("Timestamp : " + k + ", temperature : "
-//                        + jsonObject.getString(k));
-//                }
-//            // System.out.println(objects.toString());
-//            System.out.println("-----------");
-//          }
+  
+          //This is the part that laods your json file into RDF annotation
+          String loadDataIntoRDFSavefile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\newTest_now5.rdf";
+          String loadDataIntoRDFjsonFile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\temp_test5.json";
+          //loadDataIntoRDF(loadDataIntoRDFSavefile,loadDataIntoRDFjsonFile);
           
-          //makeJson(jsonFile);
-          //makeRDF();
-          //setProperty();
-          //Model model=null;
-          //makeRDF(model, jsonObject);
-          DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-          Date date = new Date();
-          System.out.println(dateFormat.format(date));
-          String file="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\newTest_now5.rdf";
-         // String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp.json";
-          //readRDF(file);
-         // String jsonFile=readFile(path, Charset.defaultCharset());
-         // JSONObject jsonObject = new JSONObject(jsonFile);
-         //loadDataIntoRDF(file);
-         //sparqlTest();
+          //This is the part that runs your sparql query
+          String RDFfile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\newTest_now5.rdf";
+          sparqlTest(RDFfile);
          
-         String erronousJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test.json";
-         String cleanJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\temp_test.json";
-         cleanUpData(erronousJSONPath, cleanJSONPath);
+         //This is the part that cleans up erroneous json file
+         String erroneousJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
+         String cleanJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\temp_test5.json";
+         //cleanUpData(erroneousJSONPath, cleanJSONPath);
         } catch (Exception e) {//OWLOntologyCreation
             e.printStackTrace();
         }
@@ -133,8 +111,8 @@ public class FirstApp {
        return new String(encoded, encoding);
     }
   
-  public static void makeJson(String file) throws Exception {
-        String jsonFile=file;
+  public static void makeJson(String rawDatasetFile,String saveJsonFilePath) throws Exception {
+        String jsonFile=rawDatasetFile;
         JSONParser jParser=new JSONParser();
         org.json.simple.JSONObject newJSONObject=new org.json.simple.JSONObject();
         
@@ -174,11 +152,10 @@ public class FirstApp {
 
         System.out.println(newJSONObject);
         
-        String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
-        FileWriter fileWriter = new FileWriter(path);
+        FileWriter fileWriter = new FileWriter(saveJsonFilePath);
 	fileWriter.write(newJSONObject.toString());
 	fileWriter.flush();
-        System.out.println("Data written successfully into json. Open at: "+path);
+        System.out.println("Data written successfully into json. Open at: "+saveJsonFilePath);
   }
   
   public static void printJSon(org.json.JSONObject jsonObj) throws Exception{
@@ -282,7 +259,7 @@ System.out.println();
   public static void setProperty()
   {
       Model model = ModelFactory.createDefaultModel();
-        
+       
         Resource subject = r("s");
         
         //model.addLiteral (subject, p("p1"), 10);
@@ -434,73 +411,18 @@ System.out.println();
         return model.size();  
     }
     
-    private static void loadDataIntoRDF(String File)throws Exception{
-        
+    private static void loadDataIntoRDF(String saveRDFFile, String jsonToReadFile)throws Exception{
          // Create an empty model 
         OntModel model = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM); 
    
-        // Use the FileManager to find the input file 
-        //InputStream in = FileManager.get().open(File)
-       
-//         if (in == null) 
-//            throw new IllegalArgumentException("File: "+File+" not found"); 
-         
-         String path="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
-          //readRDF(file);
-         String jsonFile=readFile(path, Charset.defaultCharset());
+         String jsonFile=readFile(jsonToReadFile, Charset.defaultCharset());
          org.json.JSONObject jsonData = new org.json.JSONObject(jsonFile);
          
          int objectCount=jsonData.length();
          System.out.println("Objects: "+objectCount);
         
-  
-//        // Read the RDF/XML file 
-//        model.read(in, null); 
-//   
-//        // Create a new class named "Researcher" 
-//        OntClass researcher = model.createClass(ns+"Researcher"); 
-//   
-//        // ** TASK 6.1: Create a new class named "University" ** 
-//
-//        OntClass univer = model.createClass(ns + "University"); 
-//
-//        // ** TASK 6.2: Add "Researcher" as a subclass of "Person" ** 
-//
-//        model.getOntClass(ns + "Person").addSubClass(researcher); 
-//
-//        // ** TASK 6.3: Create a new property named "worksIn" ** 
-//
-//        Property worksIn = model.createProperty(ns + "worksIn"); 
-//
-//        // ** TASK 6.4: Create a new individual of Researcher named "Jane Smith" ** 
-//
-//        Individual janeSmith = researcher.createIndividual(ns + "JaneSmith"); 
-//        
-//        // ** TASK 6.5: Add to the individual JaneSmith the fullName, given and family names ** 
-//
-//        janeSmith.addProperty(VCARD.FN,"Jane Smith"); 
-//        janeSmith.addProperty(VCARD.Given,"Jane"); 
-//        janeSmith.addProperty(VCARD.Family,"Smith"); 
-//
-//        // ** TASK 6.6: Add UPM as the university where John Smith works ** 
-//
-//              Individual johnSmith = model.getIndividual(ns + "JohnSmith"); 
-//        Individual upm = univer.createIndividual(ns + "UPM"); 
-//              johnSmith.addProperty(worksIn,upm); 
-//        model.write(System.out, "Turtle"); 
-//        
-         //model.write(System.out,"RDF/XML");
-         //return;
-        
-        //OntClass sensorMeasurement=model.createClass(ns+"SensorMeasurement");
         OntClass physicalSensor=model.createClass(ns+"temperatureSenor");
-        
-        
-        //Individual temperature=physicalSensor.createIndividual(ns+"PhysicalSensor");
-        
-        //Property producedBy=model.createProperty(ns+"producedby");
-        
-        
+     
         Iterator key = jsonData.keys();
          
         while (key.hasNext()) {
@@ -508,10 +430,6 @@ System.out.println();
             
             Individual tempData = physicalSensor.createIndividual(ns + k);
             
-            
-           Resource subject = r(k);
-            
-            //System.out.println(k);// +":"+ jsonObject.getString(k));
             org.json.JSONObject jObj= new org.json.JSONObject(jsonData.getString(k));
            
             Iterator keyI=jObj.keys();
@@ -519,31 +437,24 @@ System.out.println();
             while(keyI.hasNext()){
                 String ki=keyI.next().toString();
                 if(i==1)
-                     //tempData.addProperty(producedBy, ki);
-                     //model.add (tempData, p(ki), l(jObj.getString(ki), XSDDatatype.XSDdateTimeStamp));
                     tempData.addProperty(p(ki),l(jObj.getString(ki), XSDDatatype.XSDdateTimeStamp));
                 else
-                     //model.add (tempData, p(ki), l(jObj.getString(ki), XSDDatatype.XSDfloat));
                    tempData.addProperty(p(ki),l(jObj.getString(ki), XSDDatatype.XSDfloat));
                 i++; 
             }
             model.setNsPrefix("PhysicalSensor", BASE);
-             
-            //temperature.addProperty(producedBy,sensorMeasurement); 
-            //tempData.addProperty(prprt, subject);
-            
         }
-         model.write(System.out, "RDF/XML"); 
-         OutputStream output = new FileOutputStream(File);
+         //model.write(System.out, "RDF/XML"); 
+         OutputStream output = new FileOutputStream(saveRDFFile);
          RDFDataMgr.write(output, model, RDFFormat.RDFXML_ABBREV);
-         System.out.println("Data written successfully into RDF. Open at: "+File);
+         System.out.println("Data written successfully into RDF. Open at: "+saveRDFFile);
     }
     
-    private static void sparqlTest() throws Exception{
+    private static void sparqlTest(String RDFfile) throws Exception{
         Instant start=Instant.now();
         long beforeUsedMemory=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
-        String file="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\newTest_now2.rdf";
-        InputStream in=new FileInputStream(file);
+
+        InputStream in=new FileInputStream(RDFfile);
         Model model=ModelFactory.createDefaultModel();
         model.read(in,null,"RDF/XML");
         in.close();
@@ -564,20 +475,23 @@ System.out.println();
         QueryExecution qe= QueryExecutionFactory.create(query, model);
         ResultSet rs=qe.execSelect();
         int resultCount=0;
+        int zeroCount=0;
         while(rs.hasNext()){
             resultCount++;
             QuerySolution soln=rs.nextSolution();
             Literal time=soln.getLiteral("t");
             Literal value=soln.getLiteral("v");
             
-            boolean isFloat =checkIfFloat(value.getString()) ;
-            if(isFloat)
+            boolean isFloat =checkIfFloat(value.getString());
+            if(!isFloat){
                 System.out.println(time.getString() +" : "+value.getString());
-            else
-                System.out.println(time.getString() +" : not a float value");   
+                zeroCount++;
+            }
+//            else
+//                System.out.println(time.getString() +" : not a float value");   
         }
         qe.close();
-         System.out.println("Records Affected by query: "+resultCount);
+         System.out.println("Records Affected by query: "+zeroCount);
          Instant end=Instant.now();
          Duration timeElapsed=Duration.between(start, end);
          long afterUsedMemory=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
