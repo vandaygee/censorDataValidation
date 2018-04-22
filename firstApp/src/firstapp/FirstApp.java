@@ -14,6 +14,8 @@ import org.semanticweb.owlapi.model.*;
 import org.json.*;
 import org.json.simple.*;
 //import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -62,7 +64,12 @@ import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.util.FileManager;
-import org.json.simple.parser.JSONParser;
+
+import jxl.*;
+
+
+//Importing excel library
+
 
 
 public class FirstApp {
@@ -88,19 +95,24 @@ public class FirstApp {
           //makeJson(jsonFile,saveJsonFilePath);
           
   
-          //This is the part that laods your json file into RDF annotation
+          //This is the part that loads your json file into RDF annotation
           String loadDataIntoRDFSavefile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\newTest_now5.rdf";
           String loadDataIntoRDFjsonFile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\temp_test5.json";
           //loadDataIntoRDF(loadDataIntoRDFSavefile,loadDataIntoRDFjsonFile);
           
           //This is the part that runs your sparql query
           String RDFfile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\newTest_now5.rdf";
-          sparqlTest(RDFfile);
+          //sparqlTest(RDFfile);
          
          //This is the part that cleans up erroneous json file
          String erroneousJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\temp_test5.json";
          String cleanJSONPath="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\Cleandata\\temp_test5.json";
          //cleanUpData(erroneousJSONPath, cleanJSONPath);
+         
+         //This is that the Excel File
+         String excelFile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\EEG\\raw\\EEG Dataset\\Raw.xls";
+         String saveJSONFile="C:\\Users\\Duchess\\Documents\\SmartSUM\\Dataset\\EEG\\raw\\EEG Dataset\\Raw.json";
+         makeJSONFromExcel(excelFile,saveJSONFile);
         } catch (Exception e) {//OWLOntologyCreation
             e.printStackTrace();
         }
@@ -609,5 +621,36 @@ System.out.println();
 	fileWriter.write(newJSONObject.toString());
 	fileWriter.flush();
         System.out.println("Data written successfully into json. Open at: "+outputFile);     
+    }
+    
+    
+    public static void makeJSONFromExcel(String ExcelFile, String saveJSONFilePath) throws Exception{
+        
+        Workbook workbook =Workbook.getWorkbook(new File(ExcelFile));
+        Sheet sheet=workbook.getSheet(0);
+        
+        org.json.simple.JSONObject newJSONObject=new org.json.simple.JSONObject();
+        
+       for(int row=1;row < sheet.getRows();row++){
+           org.json.simple.JSONObject innerObject= new org.json.simple.JSONObject();//null;//=new JSONObject(); 
+           //String time="",value="";
+           
+           String hasTimeStamp=sheet.getCell(0,row).getContents();
+           String hasValue=sheet.getCell(1,row).getContents();
+           
+           innerObject.put("hasTimestamp",hasTimeStamp);
+           innerObject.put("hasValue",hasValue);
+           
+           newJSONObject.put("Temp"+row,innerObject );  
+           //System.out.println("Time: "+hasTimeStamp+ " value: "+hasValue);
+           //System.out.println(newJSONObject);
+       }
+        
+        //System.out.println(newJSONObject);
+        FileWriter fileWriter = new FileWriter(saveJSONFilePath);
+	fileWriter.write(newJSONObject.toString());
+	fileWriter.flush();
+        System.out.println("Data written successfully into json. Open at: "+saveJSONFilePath);
+        //System.out.println("no of rows:"+sheet.getColumns());
     }
 }
